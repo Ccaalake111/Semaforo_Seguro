@@ -1,0 +1,44 @@
+name: Semaforo Seguro - CI y seguridad
+on:
+  push:
+    branches: [main, test]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+      - name: Build - validar sintaxis
+        run: python -m compileall -q app.py semaforo.py
+      - name: Test - pruebas automatizadas
+        run: python -m pytest tests/ -q
+      - name: SAST - Bandit
+        run: python -m bandit -r app.py semaforo.py -ll
+      - name: Analisis de dependencias
+        run: python -m pip_audit -r requirements.txt
+
+  deploy-verification:
+    # Streamlit Community Cloud despliega automaticamente main cuando se conecta el repositorio.
+    # Tras desplegar, configurar la variable APP_URL en GitHub > Settings > Secrets and variables > Actions > Variables.
+    if: github.ref == 'refs/heads/main' && vars.APP_URL != ''
+    needs: build-test-security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar despliegue publico
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: curl --fail --location --retry 3 --max-time 30 "$APP_URL" > /dev/null
