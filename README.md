@@ -43,3 +43,6 @@ En otra terminal, ejecutar `python -m pytest tests/ -q`.
 
 ## Ejemplos de datos para demostración
 Crear una cuenta ficticia `demo@example.org` con contraseña inventada no reutilizada, registrar un incidente sin datos personales y enviar una solicitud. Probar estado vacío y el panel de administrador con secreto de entorno.
+
+## Evidencia de integracion continua
+El proyecto ejecuta pruebas con pytest y controles de seguridad con Bandit y analisis de dependencias mediante GitHub Actions.
